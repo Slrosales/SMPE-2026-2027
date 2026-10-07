@@ -1,0 +1,139 @@
+---
+title: "exercises_module2"
+output: html_document
+date: "2026-10-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+# Exercise 02-5
+
+## Analysis of the risk of failure of the O-rings of the space shuttle
+
+### Step 1 : Load the data
+
+```{r}
+shuttle <- read.csv("module2_exo5_shuttle.csv")
+shuttle
+```
+
+- **Date** : the launch date of the flight
+- **Count** : the number of O-rings on the flight (always 6)
+- **Temperature** : the air temperature at launch time, in degrees Fahrenheit
+- **Pressure** : the pressure (in psi) used for the leak test of the seals
+- **Malfunction** : how many of the 6 O-rings were damaged after the flight
+
+```{r, include=FALSE}
+# read.csv(file) : reads a CSV file and returns a data frame
+# shuttle        : the data frame; each row is one flight, each column a variable
+#   Date, Count, Temperature, Pressure, Malfunction
+```
+
+### Step 2 : Visual inspection
+
+Does the risk of a malfunction depend on the launch temperature? A scatter plot (one point per flight) shows the whole data set. It is essential to keep all 23 flights, including the 16 without any malfunction.
+
+#### 2.1 Failure (yes/no) against temperature
+
+What matters is whether **at least one** O-ring failed, so we create a binary variable `failure` (1 = yes, 0 = no)
+
+```{r}
+shuttle$failure <- as.integer(shuttle$Malfunction > 0)
+ggplot(shuttle, aes(x = Temperature, y = failure)) +
+  geom_point(size = 3) +
+  labs(title = "Failure (yes/no) vs temperature",
+       x = "Temperature (degrees F)",
+       y = "Failure (0 = no, 1 = yes)") +
+  theme_bw()
+```
+
+```{r, include=FALSE}
+# ggplot(data, aes(x = ..., y = ...)) : sets up the plot and the mapping
+#   (which column goes on the x-axis, which on the y-axis)
+# geom_point(color = ..., size = ...) : adds the points
+# labs(title =, x =, y =) : title and axis labels
+# theme_bw() : a clean black-and-white theme
+#
+# as.integer(Malfunction > 0) : turns TRUE/FALSE into 1/0, giving the
+#   binary variable "failure" (did at least one O-ring fail?)
+```
+
+### Step 3 : Estimation of the influence of temperature
+
+Colder temperatures seem to lead to more failures. A probability must stay between 0 and 1, so instead of a straight line we use logistic regression.
+
+The model is
+$\displaystyle P[\text{failure}] = \frac{e^{\alpha \cdot \text{Temperature} + \beta}}{1 + e^{\alpha \cdot \text{Temperature} + \beta}}$
+
+```{r}
+model <- glm(failure ~ Temperature, data = shuttle, family = binomial)
+summary(model)
+```
+
+The coefficient of `Temperature` is negative (about $-0.23$), so the probability of failure *decreases* when the temperature increases, and vice versa. The p-value (about $0.03$) tells us this effect is statistically significant.
+
+
+```{r, include=FALSE}
+# glm(y ~ x, family = binomial) : fits a logistic regression
+#   y      = the binary response (failure, 0 or 1)
+#   x      = the explanatory variable(s)
+#   family = binomial tells R that the response is binary (0/1)
+#
+# In summary(model):
+#   Estimate : the coefficient (slope). A negative slope means the
+#              probability of failure goes DOWN when x goes UP.
+#   Pr(>|z|) : the p-value. Below 0.05 -> the effect is significant.
+```
+
+### Step 4 : Estimation of the probability of O-ring malfunction
+
+We now use the model to estimate the probability of failure at the launch temperature, 31°F
+
+```{r}
+predict(model, newdata = data.frame(Temperature = 31), type = "response")
+```
+
+The predicted probability is extremely close to 1 (about $0.9996$): at
+31°F, the failure of an O-ring was almost certain. 
+
+
+The fitted curve, with the data and the launch temperature marked:
+
+```{r}
+ggplot(shuttle, aes(x = Temperature, y = failure)) +
+  geom_point(color = "darkred", size = 3) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"),
+              se = TRUE, fullrange = TRUE, color = "steelblue") +
+  geom_vline(xintercept = 31, color = "red", linetype = "dashed") +
+  labs(title = "Probability of failure vs temperature",
+       x = "Temperature (degrees F)",
+       y = "Probability of failure") +
+  xlim(25, 85) +
+  theme_bw()
+```
+
+```{r, include=FALSE}
+# predict(model, newdata, type = "response") : uses the fitted model to
+#   predict the probability for NEW values (here Temperature = 31).
+#   type = "response" returns the probability itself (between 0 and 1).
+#
+# geom_smooth(method = "glm", method.args = list(family = "binomial")) :
+#   draws the fitted logistic curve (with its grey confidence band).
+#   fullrange = TRUE extends the curve over the whole x range.
+# geom_vline(xintercept = 31) : a dashed vertical line at 31°F to show
+#   where the Challenger launch sits.
+# xlim(25, 85) : extends the x-axis so we see the extrapolation to 31°F.
+```
+
+## Conclusion : the three errors of reasoning
+
+The underestimation of the risk came from three errors of reasoning:
+
+1. **Drawing a conclusion without data at low temperatures.** 31°F is far below every temperature ever tested (the coldest was 53°F). "No data, therefore no risk" is wrong: the model, extrapolated, predicts a very high probability of failure.
+
+2. **Excluding key data.** That night, only the 7 flights with a problem were considered, and the 16 flights with no problem were left out. We used all 23 flights.
+
+3. **Ignoring uncertainty.** With only 23 flights and no data near 31°F, the estimate is not precise. But even taking this uncertainty into account, the risk is extremely high.

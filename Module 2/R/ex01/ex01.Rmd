@@ -1,0 +1,56 @@
+---
+title: "exercises_module2"
+output: html_document
+date: "2026-10-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercise 02-1
+
+# À propos de pi
+
+pi is $\pi$
+
+```{r}
+cat("the value of π ->", pi, "\n")
+```
+
+[Aiguilles de Buffon](https://fr.wikipedia.org/wiki/Aiguille_de_Buffon)
+```{r}
+N <- 1000000
+x <- runif(N, min = 0, max = 1)
+theta <- runif(N, min = 0, max = pi / 2)
+2 / (sum((x + sin(theta)) > 1) / N)
+```
+```{r}
+mu <- 100
+sigma <- 15
+x <- mu + sigma * rnorm(10000)
+hist(x, breaks = 40)
+grid()
+```
+
+```{r, include=FALSE}
+# Variables
+#   N     : number of needles thrown (here 1,000,000)
+#   x     : distance from the centre of the needle to the nearest line
+#   theta : angle between the needle and the parallel lines
+#   mu    : mean of the normal distribution used for the plot
+#   sigma : standard deviation of that normal distribution
+#
+# Functions
+#   runif(n, min, max) = "random uniform"
+#     Draws n random numbers uniformly between min and max
+#     (every value has the same chance). runif(N) == runif(N, 0, 1).
+#
+#   rnorm(n, mean, sd) = "random normal"
+#     Draws n random numbers from a bell-shaped normal distribution
+#     with mean `mean` and standard deviation `sd`.
+#
+#   sum()   : here counts how many TRUE there are
+#   sin()   : sine, applied to the whole vector at once (vectorisation)
+```
+
