@@ -8,11 +8,11 @@
 - [x] Report the URL of your git project, your Mattermost ID on the [Pad](https://codimd.math.cnrs.fr/L-taV29nRnaiskzgygrdHA).
 - [x] Register to the [MOOC on Reproducible Research](https://www.fun-mooc.fr/fr/cours/recherche-reproductible-principes-methodologiques-pour-une-science-transparente/)
 - [ ] Start following modules 1 + 2 of the MOOC and complete as many exercises as possible (except the last one of module 2, on *Challenger*; watching interviews is optional)
-- [ ] Set up a computational document system (e.g., [Rstudio](#rstudio) or [Jupyter](#jupyter) on your laptop or through the [UGA JupyterHub](https://jupyterhub.u-ga.fr/)).
-- [ ] Start learning R by reading this [R crash course for computer scientists](https://htmlpreview.github.io/?https://github.com/alegrand/SMPE/blob/master/sessions/2022_10_Grenoble/R_crash_course.html) ([Rmd sources](../2022_10_Grenoble/R_crash_course.Rmd)). If you want more resources, look below in the "Learning R" section or ask me.
+- [x] Set up a computational document system (e.g., [Rstudio](#rstudio) or [Jupyter](#jupyter) on your laptop or through the [UGA JupyterHub](https://jupyterhub.u-ga.fr/)).
+- [x] Start learning R by reading this [R crash course for computer scientists](https://htmlpreview.github.io/?https://github.com/alegrand/SMPE/blob/master/sessions/2022_10_Grenoble/R_crash_course.html) ([Rmd sources](../2022_10_Grenoble/R_crash_course.Rmd)). If you want more resources, look below in the "Learning R" section or ask me.
 
 ## 2. 01/10/26 — Visualization and Exploratory Data Analysis with the tidyverse and ggplot
-- [ ] MOOC: Complete exercise 5 of module 2 (*Challenger*). Write a short text explaining what is good and wrong about this document (you may want to provide an updated version of the notebook) and upload it on your GitHub/GitLab space.
+- [x] MOOC: Complete exercise 5 of module 2 (*Challenger*). Write a short text explaining what is good and wrong about this document (you may want to provide an updated version of the notebook) and upload it on your GitHub/GitLab space.
 - [ ] Criticize every figure of Jean-Marc's slides by:
   1. Applying the checklist for good graphics;
   2. Proposing a better representation (hand-drawing is fine but feel free to give a try to `ggplot2`) that passes the checklist.

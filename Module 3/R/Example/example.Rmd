@@ -1,0 +1,258 @@
+---
+title: "example"
+output: html_document
+date: "2026-10-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Reading a dataset from the web
+
+We store the address of the file in a variable
+
+```{r}
+# data_url is a character string: the web address of a CSV file
+data_url = "http://www.sentiweb.fr/datasets/incidence-PAY-3.csv"
+```
+
+`read.csv()` downloads the file and returns a **data frame**: a table
+where each row is one observation and each column is one variable.
+
+```{r}
+# read.csv(file, ...) : reads a CSV file into a data frame called `data`
+#   skip     = 1     : skip the first line (it is a comment, not a column name)
+#   na.strings = "-" : treat the symbol "-" as a missing value (NA)
+data = read.csv(data_url, skip = 1, na.strings = c("-"))
+
+# Show the first 6 rows to see what the data look like
+head(data)
+```
+
+```{r}
+# Show the last 6 rows
+tail(data)
+```
+
+## Find the rows that contain missing values
+
+A missing value in R is written `NA` ("Not Available"). We build a
+**logical vector** (a vector of `TRUE`/`FALSE`) that tells us, for each
+row, whether it contains at least one `NA`.
+
+```{r}
+# is.na(x)        : returns TRUE where x is missing, FALSE otherwise
+# any(v)          : returns TRUE if at least one element of v is TRUE
+# function(x) ... : an "anonymous" function applied to every row
+# apply(data, 1, FUN) : applies FUN to each ROW (1 = rows, 2 = columns)
+line_na = apply(data, 1, function (x) any(is.na(x)))
+
+# Select and show only the rows where line_na is TRUE
+# (the part before the comma selects the rows; empty after = keep all columns)
+data[line_na,]
+```
+
+## Check the type of the columns
+
+`class()` tells us the type of an object. This matters because R treats
+text (character), whole numbers (integer/numeric), and categories
+(factor) differently.
+
+```{r}
+class(data$week)
+```
+
+```{r}
+class(data$inc)
+```
+
+```{r, include=FALSE}
+# read.csv(url, skip = 1, na.strings = "-") : load a CSV from the web,
+#   skip the first line, read "-" as NA (missing).
+# head(x) / tail(x) : first / last 6 rows of x.
+# is.na(x)   : TRUE where x is NA.
+# any(v)     : TRUE if at least one element of v is TRUE.
+# apply(d, 1, FUN) : apply FUN to each row (1) or column (2) of d.
+# d[rows, columns] : select rows and columns (empty = "all").
+# class(x)   : the type of x.
+# data$week  : the column "week" of the data frame data.
+```
+
+## Conversion of the week numbers
+
+The `week` column stores a week as "year + week", for example `"202501"`.
+To plot the data against time we need a proper **date**, so we convert it.
+
+### Load the parsedate package
+
+```{r}
+# install.packages("parsedate") # install the package
+# library(parsedate) : load the package so we can use its functions
+library(parsedate)
+```
+
+### Write a function that converts a week to a date
+
+```{r}
+# convert_week(w) : turns "202501" into a real date
+convert_week = function(w) {
+	# paste(w) : make sure w is text (a character string)
+	ws = paste(w)
+	# substring(ws, 1, 4) : characters 1 to 4 -> the year  "2025"
+	# substring(ws, 5, 6) : characters 5 to 6 -> the week  "01"
+	# paste0(..., "-W", ...) : glue them into "2025-W01" (ISO 8601 week)
+	iso = paste0(substring(ws, 1, 4), "-W", substring(ws, 5, 6))
+	# parse_iso_8601() : parses "2025-W01" into a date/time
+	# as.character()   : keep the result as text
+	as.character(parse_iso_8601(iso))
+}
+```
+
+### Add a date column to the data
+
+```{r}
+# Apply convert_week() to every element of the "week" column, then turn the
+# result into a real Date object. Store it in a NEW column called "date".
+data$date = as.Date(convert_week(data$week))
+```
+
+```{r}
+# class() : check the type -> "Date" is R's type for dates
+class(data$date)
+```
+
+### Sort the rows by date
+
+```{r}
+# order(x) : returns the positions that sort x from smallest to largest
+# data[order(data$date), ] : reorder the rows so dates are increasing
+data = data[order(data$date),]
+```
+
+```{r}
+# Check the result: the first rows should now be the earliest dates
+head(data)
+```
+
+### Check that the dates are one week apart
+
+```{r}
+# diff(x) : differences between consecutive values (x2-x1, x3-x2, ...)
+# diff(data$date) == 7 : TRUE where two dates are 7 days apart
+# all(v) : TRUE if every element of v is TRUE
+# -> checks the data are weekly, with no gap
+all(diff(data$date) == 7)
+```
+
+### Plot the incidence over time
+
+```{r}
+# with(data, ...) : lets us use the columns directly (date, inc) instead of
+#   writing data$date and data$inc each time
+# plot(date, inc, type = "l") : a LINE plot of incidence against date
+with(data, plot(date, inc, type="l"))
+```
+
+```{r}
+# tail(data, 200) : the last 200 rows (the most recent weeks)
+# -> zoom on the end of the series
+with(tail(data, 200), plot(date, inc, type="l"))
+```
+
+```{r, include=FALSE}
+# install.packages("pkg") : install a package (once).
+# library(pkg)            : load a package to use its functions.
+# function(x) { ... }     : define your own function.
+# paste(x)                : turn x into text.
+# paste0(a, b, c)         : glue text together with NO spaces.
+# substring(s, a, b)      : characters from position a to b of s.
+# parse_iso_8601(s)       : parse an ISO 8601 date string (parsedate pkg).
+# as.character(x) / as.Date(x) : convert x to text / to a Date.
+# order(x)                : positions that sort x in increasing order.
+# diff(x)                 : differences between consecutive values.
+# all(v)                  : TRUE if every element of v is TRUE.
+# with(d, expr)           : evaluate expr using the columns of d directly.
+# plot(x, y, type = "l")  : scatter ("p") or line ("l") plot.
+```
+
+## Annual incidence
+
+We now compute the total number of cases for each "season", from
+August 1 of the previous year to August 1 of the given year. This is the
+annual incidence used by epidemiologists.
+
+### Write a function that sums the incidence of one year
+
+```{r}
+# pic_annuel(year) : total incidence of the season ending on August 1 of `year`
+pic_annuel = function(year) {
+      # paste0(year-1, "-08-01") : start of the season, e.g. "1985-08-01"
+      debut = paste0(year-1,"-08-01")
+      # end of the season, e.g. "1986-08-01"
+      fin = paste0(year,"-08-01")
+      # & : element-wise AND. TRUE for dates strictly after `debut` and up to `fin`
+      semaines = data$date > debut & data$date <= fin
+      # sum the incidence of the selected weeks; na.rm = TRUE ignores the NA values
+      sum(data$inc[semaines], na.rm=TRUE)
+}
+```
+
+### Apply it to a range of years
+
+```{r}
+# 1986:2025 : the sequence of years 1986, 1987, ..., 2025 (step of 1)
+annees = 1986:2025
+```
+
+```{r}
+# sapply(x, f) : apply the function f to EACH element of x, and return a vector
+# data.frame(a = ..., b = ...) : build a table with a column "annee"
+#   and a column "incidence"
+incidence_anuelle = data.frame(annee= annees,
+                               incidence = sapply(annees, pic_annuel))
+```
+
+```{r}
+# one row per year, with its total incidence
+head(incidence_anuelle)
+```
+
+### Plot the annual incidence
+
+```{r}
+# plot(df, type = "p") : when x is a 2-column data frame, it plots column 2
+#   against column 1 (here incidence vs year), with points ("p")
+plot(incidence_anuelle, type="p")
+```
+
+### Rank the years with the highest incidence
+
+```{r}
+# order(-x) : sort positions in DECREASING order (the minus reverses it)
+# incidence_anuelle[order(...), ] : reorder the rows, worst years first
+# head(...) : keep only the first rows (the most severe years)
+head(incidence_anuelle[order(-incidence_anuelle$incidence),])
+```
+
+### Histogram of the annual incidence
+
+```{r}
+# hist(x, breaks = 10) : histogram of the values, in 10 bins
+hist(incidence_anuelle$incidence, breaks = 10)
+```
+
+```{r, include=FALSE}
+# --- Quick reference for the annual incidence part (hidden) ---
+#
+# paste0(year-1, "-08-01") : glue a number and text into a date string.
+# a > b & a <= c           : element-wise comparisons combined with AND (&).
+# sum(x, na.rm = TRUE)     : sum, ignoring the NA values.
+# 1986:2025                : the sequence 1986, 1987, ..., 2025.
+# sapply(x, f)             : apply f to each element of x (returns a vector).
+# data.frame(a =, b =)     : build a table with named columns.
+# order(-x)                : sort positions in decreasing order.
+# plot(df, type = "p")     : for a 2-column data frame, plot col2 vs col1.
+# hist(x, breaks = n)      : histogram of x with n bins.
+```
+

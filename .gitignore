@@ -1,11 +1,10 @@
-# R / RStudio
 .Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
 
-# Knitted outputs (generated from the .Rmd sources)
 *.html
 *.tex
 *_files/
 figure-html/
+Quicksort_project
